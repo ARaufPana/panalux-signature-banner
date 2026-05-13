@@ -23,10 +23,11 @@ from . import compositor, config, fetcher
 
 log = logging.getLogger(__name__)
 
-# Sensible bounds for a valid Panalux banner. Tighter than the actual
-# render to catch corruption (~74 KB typical, 50–500 KB acceptable).
-MIN_VALID_BYTES = 20_000
-MAX_VALID_BYTES = 500_000
+# Sensible bounds for a valid Panalux banner. PNG with transparency +
+# 3 photographic posters tends to land around 250–600 KB; we allow a
+# wider range to catch obviously corrupt output without being precious.
+MIN_VALID_BYTES = 50_000
+MAX_VALID_BYTES = 2_000_000
 
 
 class ValidationError(RuntimeError):
@@ -50,8 +51,8 @@ def _validate_rendered(path: Path) -> None:
                     f"Rendered banner has wrong dimensions {im.size}, "
                     f"expected {(config.W, config.H)}"
                 )
-            if im.format != "JPEG":
-                raise ValidationError(f"Rendered banner is {im.format}, expected JPEG")
+            if im.format != "PNG":
+                raise ValidationError(f"Rendered banner is {im.format}, expected PNG")
     except (UnidentifiedImageError, OSError) as exc:
         raise ValidationError(f"Rendered banner won't open: {exc}") from exc
 
@@ -90,7 +91,7 @@ def regenerate_now() -> Optional[Path]:
         with tempfile.NamedTemporaryFile(
             dir=str(config.CACHE_DIR),
             prefix=".tmp-banner-",
-            suffix=".jpg",
+            suffix=".png",
             delete=False,
         ) as tmp:
             tmp_path = Path(tmp.name)

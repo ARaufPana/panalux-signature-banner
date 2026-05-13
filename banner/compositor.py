@@ -1,9 +1,15 @@
-"""Composes the email-signature banner PNG from a list of credits."""
+"""Composes the email-signature banner PNG from a list of credits.
+
+Layout: "Proudly Supporting" caption centered at the top, 3 posters
+centered in a row below. Background is fully transparent so the banner
+adapts to the email client's light/dark mode (the text colour is a
+neutral grey that's legible on both).
+"""
 
 import logging
 from io import BytesIO
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -17,21 +23,19 @@ log = logging.getLogger(__name__)
 class CompositorError(RuntimeError):
     """Raised when not enough posters can be downloaded to render the banner."""
 
+
 POSTER_RATIO = 350 / 525  # 2:3
 
-COLOR_BG = "white"
-COLOR_POSTER_ZONE = "#000000"
-COLOR_HEADLINE = "#000000"
-COLOR_META = "#7B7C7E"
-COLOR_ACCENT = "#D7282F"  # Panalux red
+# Neutral grey that reads on both white and dark backgrounds — matches
+# the existing Panalux 2025 signature text colour exactly.
+COLOR_TEXT = (123, 124, 126, 255)  # #7B7C7E with full alpha
 
-# Font paths are platform-specific. We try macOS Arial first (for local
-# dev) then Linux equivalents (for the GitHub Actions runner). Liberation
-# Sans is metric-compatible with Arial — renders nearly identically.
+# Font paths are platform-specific. Liberation Sans is metric-compatible
+# with Arial — renders nearly identically.
 FONT_BOLD_CANDIDATES = [
-    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",                    # macOS
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",         # Ubuntu w/ fonts-liberation
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",                 # Ubuntu fallback (pre-installed)
+    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
 FONT_REGULAR_CANDIDATES = [
     "/System/Library/Fonts/Supplemental/Arial.ttf",
@@ -66,11 +70,6 @@ def _fetch_poster(url: str) -> Image.Image:
 def _download_posters_resilient(
     candidates: List[Credit], needed: int = 3
 ) -> Tuple[List[Image.Image], List[Credit]]:
-    """
-    Try each candidate in order; collect the first `needed` whose posters
-    download successfully. Returns (posters, used_credits). Raises
-    CompositorError if fewer than `needed` posters are usable.
-    """
     posters: List[Image.Image] = []
     used: List[Credit] = []
     for c in candidates:
@@ -94,78 +93,68 @@ def _download_posters_resilient(
 
 def compose(credits: List[Credit]) -> Image.Image:
     """
-    Compose the banner. Accepts a list of candidate credits; uses the
-    first 3 whose posters successfully download.
+    Compose the banner with a fully transparent background.
+
+    Layout (display dimensions, 600 × 200):
+      ├── 14px top padding
+      ├── "Proudly Supporting" — Arial Bold 18pt, centered, #7B7C7E
+      ├── 14px gap
+      ├── 3 posters in a row, each ~130×87px, centered with 14px gaps
+      └── 14px bottom padding
     """
     if len(credits) < 3:
         raise ValueError(f"compose() needs at least 3 candidates, got {len(credits)}")
 
     W, H = config.W, config.H
     SCALE = config.SCALE
-    SPLIT_X = W // 2
 
-    img = Image.new("RGB", (W, H), COLOR_BG)
+    # Fully transparent RGBA canvas
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # Right half: black poster zone
-    draw.rectangle([SPLIT_X, 0, W, H], fill=COLOR_POSTER_ZONE)
+    # --- "Proudly Supporting" text, centered horizontally near top ---
+    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 18)
+    text = "Proudly Supporting"
+    bbox = draw.textbbox((0, 0), text, font=font_supporting)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    text_x = (W - text_w) // 2
+    text_y_display = 14
+    text_y = text_y_display * SCALE
+    draw.text((text_x, text_y), text, font=font_supporting, fill=COLOR_TEXT)
 
+    # --- Posters centered below ---
     posters, used = _download_posters_resilient(credits, needed=3)
     log.info("Banner credits: %s", [c.title for c in used])
 
-    # Posters
-    pad_tb = 10 * SCALE
-    poster_h = H - pad_tb * 2
+    # Vertical layout: top pad + text + gap + posters + bottom pad
+    text_block_h = text_y_display * SCALE + text_h
+    gap_below_text = 14 * SCALE
+    pad_bottom = 14 * SCALE
+
+    poster_h = H - text_block_h - gap_below_text - pad_bottom
     poster_w = int(poster_h * POSTER_RATIO)
-    gap = 10 * SCALE
-    right_zone_w = W - SPLIT_X
+    gap = 14 * SCALE
     total_w = 3 * poster_w + 2 * gap
-    x_start = SPLIT_X + (right_zone_w - total_w) // 2
-    y_start = (H - poster_h) // 2
+    x_start = (W - total_w) // 2
+    y_start = text_block_h + gap_below_text
 
     for i, poster in enumerate(posters):
         poster = poster.resize((poster_w, poster_h), Image.LANCZOS)
         x = x_start + i * (poster_w + gap)
         img.paste(poster, (x, y_start))
 
-    # Brand zone
-    pad_left = 28 * SCALE
-    logo = Image.open(config.ASSETS_DIR / "Panalux_Logo_2025_colour.png").convert("RGBA")
-    target_logo_h = 50 * SCALE
-    ratio = target_logo_h / logo.height
-    logo = logo.resize((int(logo.width * ratio), target_logo_h), Image.LANCZOS)
-    logo_y = 18 * SCALE
-    img.paste(logo, (pad_left, logo_y), logo)
-
-    font_headline = _load_font(FONT_BOLD_CANDIDATES, 20)
-    font_subtitle = _load_font(FONT_REGULAR_CANDIDATES, 13)
-
-    headline_y = logo_y + logo.height + 14 * SCALE
-    draw.text((pad_left, headline_y), "LATEST CREDITS", font=font_headline, fill=COLOR_HEADLINE)
-
-    accent_y = headline_y + 26 * SCALE
-    draw.rectangle(
-        [pad_left, accent_y, pad_left + 32 * SCALE, accent_y + 3 * SCALE],
-        fill=COLOR_ACCENT,
-    )
-
-    subtitle_y = accent_y + 9 * SCALE
-    draw.text((pad_left, subtitle_y), "Serviced by Panalux", font=font_subtitle, fill=COLOR_META)
-
     return img
-
-
-JPEG_QUALITY = 92
 
 
 def render_to_bytes(credits: List[Credit]) -> bytes:
     img = compose(credits)
     buf = BytesIO()
-    img.save(buf, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+    img.save(buf, "PNG", optimize=True)
     return buf.getvalue()
 
 
 def render_to_file(credits: List[Credit], path: Path) -> Path:
     img = compose(credits)
-    img.save(path, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+    img.save(path, "PNG", optimize=True)
     return path

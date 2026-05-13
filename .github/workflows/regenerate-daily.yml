@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add cache/panalux-latest.jpg cache/panalux-last-good.jpg
+          git add cache/panalux-latest.png cache/panalux-last-good.png
           if git diff --staged --quiet; then
             echo "Banner unchanged — nothing to commit"
           else
@@ -54,6 +54,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: panalux-banner-${{ github.run_id }}
-          path: cache/panalux-latest.jpg
+          path: cache/panalux-latest.png
           if-no-files-found: warn
           retention-days: 30

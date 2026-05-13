@@ -51,7 +51,7 @@ def create_app() -> Flask:
 
     admin_token = os.environ.get("ADMIN_TOKEN")
 
-    @app.route("/signature/panalux-latest.jpg")
+    @app.route("/signature/panalux-latest.png")
     def banner():
         path = cache.serve_path()
         if path is None:

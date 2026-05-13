@@ -14,7 +14,7 @@ SOURCE_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 CLICK_THROUGH_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 
 # Banner dimensions
-DISPLAY_W, DISPLAY_H = 600, 150
+DISPLAY_W, DISPLAY_H = 600, 200
 SCALE = 2
 W, H = DISPLAY_W * SCALE, DISPLAY_H * SCALE
 
@@ -24,6 +24,6 @@ HTTP_TIMEOUT = 15
 USER_AGENT = "PanaluxSignatureBanner/1.0 (+aaron.rauf@panavision.co.uk)"
 
 # Cache
-LIVE_BANNER_NAME = "panalux-latest.jpg"
-LAST_GOOD_NAME = "panalux-last-good.jpg"
-BANNER_MIME = "image/jpeg"
+LIVE_BANNER_NAME = "panalux-latest.png"
+LAST_GOOD_NAME = "panalux-last-good.png"
+BANNER_MIME = "image/png"
