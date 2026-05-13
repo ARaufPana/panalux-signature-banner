@@ -14,7 +14,7 @@ SOURCE_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 CLICK_THROUGH_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 
 # Banner dimensions — matches the 320px-wide email signature table
-DISPLAY_W, DISPLAY_H = 320, 140
+DISPLAY_W, DISPLAY_H = 320, 115
 SCALE = 2
 W, H = DISPLAY_W * SCALE, DISPLAY_H * SCALE
 

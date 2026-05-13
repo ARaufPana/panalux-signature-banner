@@ -125,7 +125,7 @@ def compose(credits: List[Credit]) -> Image.Image:
     font_supporting = _load_font(FONT_BOLD_CANDIDATES, 8)
     text = "PROUDLY SUPPORTED BY PANALUX:"
     text_x = 0  # flush with banner's left edge (matches edge-to-edge posters)
-    text_y_display = 12
+    text_y_display = 0  # flush with top edge — no top padding
     text_y = text_y_display * SCALE
     draw.text((text_x, text_y), text, font=font_supporting, fill=COLOR_TEXT)
 
