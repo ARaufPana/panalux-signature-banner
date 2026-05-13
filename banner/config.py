@@ -13,8 +13,10 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 SOURCE_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 CLICK_THROUGH_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 
-# Banner dimensions — matches the 320px-wide email signature table
-DISPLAY_W, DISPLAY_H = 320, 115
+# Banner dimensions — matches the 320px-wide email signature table.
+# Banner is now just the 5 poster columns; "PROUDLY SUPPORTED BY PANALUX:"
+# headline + red accent line are rendered as live HTML in the email signature.
+DISPLAY_W, DISPLAY_H = 320, 90
 SCALE = 2
 W, H = DISPLAY_W * SCALE, DISPLAY_H * SCALE
 

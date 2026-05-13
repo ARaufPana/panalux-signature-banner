@@ -96,16 +96,16 @@ def _download_posters_resilient(
 
 def compose(credits: List[Credit]) -> Image.Image:
     """
-    Compose the banner with a fully transparent background.
+    Compose the banner: just 5 poster columns, edge-to-edge, transparent BG.
 
-    Layout (display dimensions, 320 × 130 — matches the 320px signature):
-      ├── 12px top padding
-      ├── "PROUDLY SUPPORTING" — Arial Bold, left-aligned at x=14, #7B7C7E
-      ├── 4px gap
-      ├── 22px red accent bar (#D7282F, 2px tall, x=14)
-      ├── 10px gap
-      ├── 5 posters in a row, each 52×78px display, edge-to-edge with 8px gaps
-      └── 8px bottom padding
+    The "PROUDLY SUPPORTED BY PANALUX:" headline and red accent line are
+    rendered as live HTML in the email signature itself so they match the
+    rest of the signature's text exactly (Arial Bold 6pt #7B7C7E). This
+    sidesteps the bitmap-vs-HTML font-rendering mismatch that made the
+    image-baked headline look thinner than the surrounding live text.
+
+    Layout (display dimensions, 320 × 90):
+      └── 5 posters in a row, 60×90px display, edge-to-edge with 5px gaps
     """
     needed = config.NUM_CREDITS
     if len(credits) < needed:
@@ -116,35 +116,8 @@ def compose(credits: List[Credit]) -> Image.Image:
     W, H = config.W, config.H
     SCALE = config.SCALE
 
-    # Fully transparent RGBA canvas
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
 
-    # --- Header text: matches "THE PANAVISION GROUP" styling exactly ---
-    # Email signature uses Arial Bold 6pt = 8px display = 16px actual at 2x retina.
-    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 8)
-    text = "PROUDLY SUPPORTED BY PANALUX:"
-    text_x = 0  # flush with banner's left edge (matches edge-to-edge posters)
-    text_y_display = 0  # flush with top edge — no top padding
-    text_y = text_y_display * SCALE
-    draw.text((text_x, text_y), text, font=font_supporting, fill=COLOR_TEXT)
-
-    # Measure the rendered text so the accent bar sits cleanly under it
-    bbox = draw.textbbox((text_x, text_y), text, font=font_supporting)
-    text_bottom = bbox[3]
-
-    # --- Red accent bar under the text (matches original "LATEST CREDITS" treatment) ---
-    accent_gap = 4 * SCALE
-    accent_y = text_bottom + accent_gap
-    accent_w = 22 * SCALE
-    accent_h = 2 * SCALE
-    draw.rectangle(
-        [text_x, accent_y, text_x + accent_w, accent_y + accent_h],
-        fill=COLOR_ACCENT,
-    )
-    accent_bottom = accent_y + accent_h
-
-    # --- Posters in a row below, edge-to-edge ---
     posters, used = _download_posters_resilient(credits, needed=needed)
     log.info("Banner credits: %s", [c.title for c in used])
 
@@ -155,8 +128,7 @@ def compose(credits: List[Credit]) -> Image.Image:
     poster_w = (W - 4 * gap) // 5
     poster_h = int(poster_w / POSTER_RATIO)
 
-    gap_above_posters = 10 * SCALE
-    y_start = accent_bottom + gap_above_posters
+    y_start = 0  # poster row fills the entire banner height
     x_start = side_pad
 
     for i, poster in enumerate(posters):
