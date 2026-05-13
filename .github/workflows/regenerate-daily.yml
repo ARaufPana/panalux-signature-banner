@@ -1,0 +1,54 @@
+name: Regenerate Panalux banner
+
+on:
+  schedule:
+    # 03:00 UTC daily. Cron times in GitHub Actions are best-effort and may
+    # be delayed by a few minutes; for a daily banner that's fine.
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}  # allows manual triggering from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regenerate-banner
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Regenerate banner
+        run: python regenerate.py
+
+      - name: Commit banner if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cache/panalux-latest.jpg cache/panalux-last-good.jpg
+          if git diff --staged --quiet; then
+            echo "Banner unchanged — nothing to commit"
+          else
+            git commit -m "chore: daily regeneration $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
+
+      - name: Upload banner as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: panalux-banner-${{ github.run_id }}
+          path: cache/panalux-latest.jpg
+          if-no-files-found: warn
+          retention-days: 30

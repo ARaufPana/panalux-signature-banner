@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+output/
+.DS_Store
+
+# Cache: track the produced JPEGs (this is what GitHub Actions commits each day
+# and what email signatures embed), but ignore the atomic-write temp files.
+cache/.tmp-*
