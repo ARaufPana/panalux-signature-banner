@@ -25,12 +25,32 @@ COLOR_HEADLINE = "#000000"
 COLOR_META = "#7B7C7E"
 COLOR_ACCENT = "#D7282F"  # Panalux red
 
-FONT_BOLD = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
-FONT_REGULAR = "/System/Library/Fonts/Supplemental/Arial.ttf"
+# Font paths are platform-specific. We try macOS Arial first (for local
+# dev) then Linux equivalents (for the GitHub Actions runner). Liberation
+# Sans is metric-compatible with Arial — renders nearly identically.
+FONT_BOLD_CANDIDATES = [
+    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",                    # macOS
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",         # Ubuntu w/ fonts-liberation
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",                 # Ubuntu fallback (pre-installed)
+]
+FONT_REGULAR_CANDIDATES = [
+    "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+]
 
 
-def _load_font(path: str, display_size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(path, display_size * config.SCALE)
+def _resolve_font(candidates: List[str]) -> str:
+    for p in candidates:
+        if Path(p).exists():
+            return p
+    raise FileNotFoundError(
+        f"None of the candidate font paths exist on this system: {candidates}"
+    )
+
+
+def _load_font(candidates: List[str], display_size: int) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(_resolve_font(candidates), display_size * config.SCALE)
 
 
 def _fetch_poster(url: str) -> Image.Image:
@@ -117,8 +137,8 @@ def compose(credits: List[Credit]) -> Image.Image:
     logo_y = 18 * SCALE
     img.paste(logo, (pad_left, logo_y), logo)
 
-    font_headline = _load_font(FONT_BOLD, 20)
-    font_subtitle = _load_font(FONT_REGULAR, 13)
+    font_headline = _load_font(FONT_BOLD_CANDIDATES, 20)
+    font_subtitle = _load_font(FONT_REGULAR_CANDIDATES, 13)
 
     headline_y = logo_y + logo.height + 14 * SCALE
     draw.text((pad_left, headline_y), "LATEST CREDITS", font=font_headline, fill=COLOR_HEADLINE)
