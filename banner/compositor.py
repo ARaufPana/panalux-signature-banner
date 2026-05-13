@@ -120,14 +120,25 @@ def compose(credits: List[Credit]) -> Image.Image:
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # --- Header text: matches "THE PANAVISION GROUP" styling exactly ---
-    # Email signature uses Arial Bold 6pt = 8px display = 16px actual at 2x retina.
-    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 8)
+    # --- Header text: matches "THE PANAVISION GROUP" styling ---
+    # Email signature uses Arial Bold 6pt. We render slightly larger here
+    # (effective ~7.5pt) so the bitmap-rendered text doesn't look lighter than
+    # the live HTML text — image anti-aliasing softens edges by ~10–15% of
+    # perceived weight, so a small upsize compensates.
+    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 10)
+    # Also add a 1-pixel stroke for extra weight to better match live HTML bold.
     text = "PROUDLY SUPPORTED BY PANALUX:"
     text_x = 0  # flush with banner's left edge (matches edge-to-edge posters)
     text_y_display = 0  # flush with top edge — no top padding
     text_y = text_y_display * SCALE
-    draw.text((text_x, text_y), text, font=font_supporting, fill=COLOR_TEXT)
+    draw.text(
+        (text_x, text_y),
+        text,
+        font=font_supporting,
+        fill=COLOR_TEXT,
+        stroke_width=1,
+        stroke_fill=COLOR_TEXT,
+    )
 
     # Measure the rendered text so the accent bar sits cleanly under it
     bbox = draw.textbbox((text_x, text_y), text, font=font_supporting)
