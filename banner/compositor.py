@@ -143,13 +143,15 @@ def compose(credits: List[Credit]) -> Image.Image:
     )
     accent_bottom = accent_y + accent_h
 
-    # --- Posters in a row below ---
+    # --- Posters in a row below, edge-to-edge ---
     posters, used = _download_posters_resilient(credits, needed=needed)
     log.info("Banner credits: %s", [c.title for c in used])
 
-    side_pad = 14 * SCALE
-    gap = 8 * SCALE
-    poster_w = (W - 2 * side_pad - 4 * gap) // 5
+    # Edge-to-edge: zero side padding, 5px gap between posters.
+    #   5 * poster_w + 4 * gap = 320  →  poster_w = 60, poster_h = 90 (2:3)
+    side_pad = 0
+    gap = 5 * SCALE
+    poster_w = (W - 4 * gap) // 5
     poster_h = int(poster_w / POSTER_RATIO)
 
     gap_above_posters = 10 * SCALE
