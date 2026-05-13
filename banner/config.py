@@ -13,13 +13,13 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 SOURCE_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 CLICK_THROUGH_URL = "https://www.panavision.com/highlights/credits?divisions=_panalux"
 
-# Banner dimensions
-DISPLAY_W, DISPLAY_H = 600, 200
+# Banner dimensions — matches the 320px-wide email signature table
+DISPLAY_W, DISPLAY_H = 320, 120
 SCALE = 2
 W, H = DISPLAY_W * SCALE, DISPLAY_H * SCALE
 
 # Fetcher
-NUM_CREDITS = 3
+NUM_CREDITS = 5
 HTTP_TIMEOUT = 15
 USER_AGENT = "PanaluxSignatureBanner/1.0 (+aaron.rauf@panavision.co.uk)"
 

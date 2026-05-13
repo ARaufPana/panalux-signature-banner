@@ -105,39 +105,67 @@ def is_panalux_credit(detail_url: str) -> bool:
     return PANALUX_MARKER in m.group(1).lower()
 
 
+LISTING_BASE_URL = "https://www.panavision.com/highlights/credits"
+
+
+def _page_url(page: int) -> str:
+    """Build the listing URL for a given page number (page 1 has no query)."""
+    if page <= 1:
+        return LISTING_BASE_URL
+    return f"{LISTING_BASE_URL}?page={page}"
+
+
 def fetch_panalux_candidates(
     min_count: Optional[int] = None,
-    max_count: int = 9,
+    max_count: int = 12,
+    max_pages: int = 5,
 ) -> List[Credit]:
     """
-    Return up to max_count Panalux candidates in newest-first order.
+    Walk the credits listing across multiple pages and return Panalux
+    candidates in newest-first order.
 
-    We return more than strictly needed so the compositor has fallback
-    options if any individual poster URL fails to download — that way a
-    single broken poster on Panavision's CDN won't break the whole run.
+    The site renders ~16-26 cards per listing page; `?page=N` requests
+    older pages. We stop as soon as we have `max_count` candidates or
+    we've walked `max_pages` pages, whichever comes first.
 
-    Raises FetcherError if fewer than min_count candidates are found, in
-    which case the cache layer keeps serving last-good.
+    Raises FetcherError if fewer than `min_count` candidates are found,
+    in which case the cache layer keeps serving last-good.
     """
     if min_count is None:
         min_count = config.NUM_CREDITS
 
-    all_credits = parse_all_cards(fetch_html())
-    log.info("Scanning %d listing cards for Panalux credits", len(all_credits))
-
     candidates: List[Credit] = []
-    for credit in all_credits:
-        if is_panalux_credit(credit.detail_url):
-            log.info("Panalux candidate: %s", credit.title)
-            candidates.append(credit)
-            if len(candidates) >= max_count:
-                break
+    seen_urls = set()
+    cards_scanned = 0
+
+    for page in range(1, max_pages + 1):
+        if len(candidates) >= max_count:
+            break
+        try:
+            html = fetch_html(_page_url(page))
+        except requests.RequestException as exc:
+            log.warning("Page %d fetch failed (%s) — stopping pagination", page, exc)
+            break
+
+        page_cards = parse_all_cards(html)
+        log.info("Page %d: %d listing cards", page, len(page_cards))
+
+        for credit in page_cards:
+            if credit.detail_url in seen_urls:
+                continue
+            seen_urls.add(credit.detail_url)
+            cards_scanned += 1
+
+            if is_panalux_credit(credit.detail_url):
+                log.info("Panalux candidate: %s (page %d)", credit.title, page)
+                candidates.append(credit)
+                if len(candidates) >= max_count:
+                    break
 
     if len(candidates) < min_count:
         raise FetcherError(
-            f"Only found {len(candidates)} Panalux candidates in {len(all_credits)} "
-            f"listing cards — need at least {min_count}. Either Panalux's recent "
-            f"share has dropped or the og:description format has changed."
+            f"Only found {len(candidates)} Panalux candidates across "
+            f"{cards_scanned} cards in {max_pages} pages — need at least {min_count}."
         )
 
     log.info("Returning %d Panalux candidates", len(candidates))

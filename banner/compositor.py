@@ -30,15 +30,17 @@ POSTER_RATIO = 350 / 525  # 2:3
 # the existing Panalux 2025 signature text colour exactly.
 COLOR_TEXT = (123, 124, 126, 255)  # #7B7C7E with full alpha
 
-# Font paths are platform-specific. Liberation Sans is metric-compatible
-# with Arial — renders nearly identically.
+# Font paths — try real Arial first (macOS native + Microsoft Core Fonts
+# package on Linux), then Liberation Sans (metric-compatible) as fallback.
 FONT_BOLD_CANDIDATES = [
-    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",                # macOS
+    "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf",           # Ubuntu w/ ttf-mscorefonts-installer
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",     # Ubuntu metric-compatible fallback
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
 FONT_REGULAR_CANDIDATES = [
     "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
 ]
@@ -95,15 +97,18 @@ def compose(credits: List[Credit]) -> Image.Image:
     """
     Compose the banner with a fully transparent background.
 
-    Layout (display dimensions, 600 × 200):
-      ├── 14px top padding
-      ├── "Proudly Supporting" — Arial Bold 18pt, centered, #7B7C7E
-      ├── 14px gap
-      ├── 3 posters in a row, each ~130×87px, centered with 14px gaps
-      └── 14px bottom padding
+    Layout (display dimensions, 320 × 120 — matches the 320px signature):
+      ├── 10px top padding
+      ├── "Proudly Supporting" — Arial Bold 11pt-ish, centered, #7B7C7E
+      ├── 6px gap
+      ├── 5 posters in a row, each 52×78px display, centered with 8px gaps
+      └── 10px bottom padding
     """
-    if len(credits) < 3:
-        raise ValueError(f"compose() needs at least 3 candidates, got {len(credits)}")
+    needed = config.NUM_CREDITS
+    if len(credits) < needed:
+        raise ValueError(
+            f"compose() needs at least {needed} candidates, got {len(credits)}"
+        )
 
     W, H = config.W, config.H
     SCALE = config.SCALE
@@ -113,31 +118,34 @@ def compose(credits: List[Credit]) -> Image.Image:
     draw = ImageDraw.Draw(img)
 
     # --- "Proudly Supporting" text, centered horizontally near top ---
-    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 18)
-    text = "Proudly Supporting"
+    # Size 11 → matches the signature's display name typographic weight
+    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 11)
+    text = "PROUDLY SUPPORTING"
     bbox = draw.textbbox((0, 0), text, font=font_supporting)
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
     text_x = (W - text_w) // 2
-    text_y_display = 14
+    text_y_display = 10
     text_y = text_y_display * SCALE
     draw.text((text_x, text_y), text, font=font_supporting, fill=COLOR_TEXT)
 
     # --- Posters centered below ---
-    posters, used = _download_posters_resilient(credits, needed=3)
+    posters, used = _download_posters_resilient(credits, needed=needed)
     log.info("Banner credits: %s", [c.title for c in used])
 
-    # Vertical layout: top pad + text + gap + posters + bottom pad
-    text_block_h = text_y_display * SCALE + text_h
-    gap_below_text = 14 * SCALE
-    pad_bottom = 14 * SCALE
+    # Horizontal layout for 5 posters across 320px width:
+    #   2*side_pad + 5*poster_w + 4*gap = 320  (display px)
+    #   With side_pad=14 and gap=8: poster_w = (320 - 28 - 32) / 5 = 52
+    side_pad = 14 * SCALE
+    gap = 8 * SCALE
+    poster_w = (W - 2 * side_pad - 4 * gap) // 5
+    poster_h = int(poster_w / POSTER_RATIO)  # 2:3 ratio
 
-    poster_h = H - text_block_h - gap_below_text - pad_bottom
-    poster_w = int(poster_h * POSTER_RATIO)
-    gap = 14 * SCALE
-    total_w = 3 * poster_w + 2 * gap
-    x_start = (W - total_w) // 2
+    # Vertical positioning
+    gap_below_text = 6 * SCALE
+    text_block_h = text_y_display * SCALE + text_h
     y_start = text_block_h + gap_below_text
+    x_start = side_pad
 
     for i, poster in enumerate(posters):
         poster = poster.resize((poster_w, poster_h), Image.LANCZOS)

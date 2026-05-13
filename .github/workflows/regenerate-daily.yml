@@ -26,10 +26,16 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install system fonts (metric-compatible Arial substitute)
+      - name: Install Arial (Microsoft Core Fonts) + Liberation fallback
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq fonts-liberation
+          # ttf-mscorefonts-installer requires EULA acceptance — auto-accept it.
+          echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" \
+            | sudo debconf-set-selections
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            ttf-mscorefonts-installer fonts-liberation
+          # Refresh font cache so Pillow can find them
+          sudo fc-cache -f
 
       - name: Install Python deps
         run: pip install -r requirements.txt
