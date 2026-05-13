@@ -120,12 +120,9 @@ def compose(credits: List[Credit]) -> Image.Image:
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # --- Header text: matches "THE PANAVISION GROUP" styling ---
-    # Email signature uses Arial Bold 6pt. We render at size 9 here (vs the
-    # technically-equivalent 8) to compensate for bitmap anti-aliasing
-    # softening that makes image-baked text read a touch lighter than live
-    # HTML text at the same nominal size.
-    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 9)
+    # --- Header text: matches "THE PANAVISION GROUP" styling exactly ---
+    # Email signature uses Arial Bold 6pt = 8px display = 16px actual at 2x retina.
+    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 8)
     text = "PROUDLY SUPPORTED BY PANALUX:"
     text_x = 0  # flush with banner's left edge (matches edge-to-edge posters)
     text_y_display = 0  # flush with top edge — no top padding
