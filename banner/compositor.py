@@ -120,10 +120,10 @@ def compose(credits: List[Credit]) -> Image.Image:
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # --- "PROUDLY SUPPORTING" left-aligned with padding ---
+    # --- "PROUDLY SUPPORTING" flush-left, aligned with edge-to-edge poster row ---
     font_supporting = _load_font(FONT_BOLD_CANDIDATES, 12)
     text = "PROUDLY SUPPORTING"
-    text_x = 14 * SCALE  # align with poster row's left edge
+    text_x = 0  # flush with banner's left edge (matches edge-to-edge posters)
     text_y_display = 12
     text_y = text_y_display * SCALE
     draw.text((text_x, text_y), text, font=font_supporting, fill=COLOR_TEXT)
