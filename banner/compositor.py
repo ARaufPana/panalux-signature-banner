@@ -29,7 +29,7 @@ POSTER_RATIO = 350 / 525  # 2:3
 # Neutral grey that reads on both white and dark backgrounds — matches
 # the existing Panalux 2025 signature text colour exactly.
 COLOR_TEXT = (123, 124, 126, 255)  # #7B7C7E with full alpha
-COLOR_ACCENT = (215, 40, 47, 255)  # #D7282F Panalux red
+COLOR_ACCENT = (228, 2, 44, 255)  # #E4022C — exact red sampled from Panalux 2025 logo
 
 # Font paths — try real Arial first (macOS native + Microsoft Core Fonts
 # package on Linux), then Liberation Sans (metric-compatible) as fallback.
@@ -120,9 +120,10 @@ def compose(credits: List[Credit]) -> Image.Image:
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # --- "PROUDLY SUPPORTING" flush-left, aligned with edge-to-edge poster row ---
-    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 12)
-    text = "PROUDLY SUPPORTING"
+    # --- Header text: matches "THE PANAVISION GROUP" styling exactly ---
+    # Email signature uses Arial Bold 6pt = 8px display = 16px actual at 2x retina.
+    font_supporting = _load_font(FONT_BOLD_CANDIDATES, 8)
+    text = "PROUDLY SUPPORTED BY PANALUX:"
     text_x = 0  # flush with banner's left edge (matches edge-to-edge posters)
     text_y_display = 12
     text_y = text_y_display * SCALE
