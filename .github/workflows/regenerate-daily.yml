@@ -2,9 +2,11 @@ name: Regenerate Panalux banner
 
 on:
   schedule:
-    # 03:00 UTC daily. Cron times in GitHub Actions are best-effort and may
-    # be delayed by a few minutes; for a daily banner that's fine.
-    - cron: "0 3 * * *"
+    # 04:23 UTC daily. GitHub Actions cron is best-effort and round-hour
+    # slots (03:00, 04:00, etc.) are heavily congested — using an arbitrary
+    # off-peak minute (:23) significantly improves the chance of firing
+    # close to the intended time.
+    - cron: "23 4 * * *"
   workflow_dispatch: {}  # allows manual triggering from the Actions tab
 
 permissions:
