@@ -23,7 +23,7 @@ W, H = DISPLAY_W * SCALE, DISPLAY_H * SCALE
 # Fetcher
 NUM_CREDITS = 5
 HTTP_TIMEOUT = 15
-USER_AGENT = "PanaluxSignatureBanner/1.0 (+aaron.rauf@panavision.co.uk)"
+USER_AGENT = "PanaluxSignatureBanner/1.0 (Panavision Group; internal email signature tool)"
 
 # Cache
 LIVE_BANNER_NAME = "panalux-latest.png"
