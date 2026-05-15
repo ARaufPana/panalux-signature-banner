@@ -2,12 +2,20 @@ name: Regenerate Panalux banner
 
 on:
   schedule:
-    # 04:23 UTC daily. GitHub Actions cron is best-effort and round-hour
-    # slots (03:00, 04:00, etc.) are heavily congested — using an arbitrary
-    # off-peak minute (:23) significantly improves the chance of firing
-    # close to the intended time.
-    - cron: "23 4 * * *"
-  workflow_dispatch: {}  # allows manual triggering from the Actions tab
+    # Multiple slots: GitHub Actions cron is famously unreliable, sometimes
+    # skipping scheduled runs entirely. We try three off-peak times a day;
+    # if all three fire, the workflow's `git diff --staged --quiet` check
+    # turns the second/third into no-ops. If only one fires, we still get
+    # our daily regeneration. Cumulative success rate ≫ single-slot.
+    - cron: "23 4 * * *"   # 04:23 UTC primary
+    - cron: "37 8 * * *"   # 08:37 UTC backup #1
+    - cron: "47 14 * * *"  # 14:47 UTC backup #2
+  workflow_dispatch: {}    # allows manual triggering from the Actions tab
+  repository_dispatch:
+    # Allows an external cron service (e.g. cron-job.org) to trigger the
+    # workflow via the GitHub REST API — the most reliable fix if even the
+    # multi-slot schedule above continues to drop runs.
+    types: [daily-banner-trigger]
 
 permissions:
   contents: write
