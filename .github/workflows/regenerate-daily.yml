@@ -2,14 +2,12 @@ name: Regenerate Panalux banner
 
 on:
   schedule:
-    # Multiple slots: GitHub Actions cron is famously unreliable, sometimes
-    # skipping scheduled runs entirely. We try three off-peak times a day;
-    # if all three fire, the workflow's `git diff --staged --quiet` check
-    # turns the second/third into no-ops. If only one fires, we still get
-    # our daily regeneration. Cumulative success rate ≫ single-slot.
-    - cron: "23 4 * * *"   # 04:23 UTC primary
-    - cron: "37 8 * * *"   # 08:37 UTC backup #1
-    - cron: "47 14 * * *"  # 14:47 UTC backup #2
+    # TEMPORARY: tight debug loop — three slots in the next 15 minutes from
+    # 2026-05-15 08:19 UTC push. Revert to daily times once we've confirmed
+    # whether GHA cron fires at all for this repo.
+    - cron: "26 8 * * *"   # 08:26 UTC
+    - cron: "29 8 * * *"   # 08:29 UTC
+    - cron: "32 8 * * *"   # 08:32 UTC
   workflow_dispatch: {}    # allows manual triggering from the Actions tab
   repository_dispatch:
     # Allows an external cron service (e.g. cron-job.org) to trigger the
