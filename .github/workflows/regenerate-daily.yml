@@ -2,17 +2,13 @@ name: Regenerate Panalux banner
 
 on:
   schedule:
-    # TEMPORARY: tight debug loop — three slots in the next 15 minutes from
-    # 2026-05-15 08:19 UTC push. Revert to daily times once we've confirmed
-    # whether GHA cron fires at all for this repo.
-    - cron: "26 8 * * *"   # 08:26 UTC
-    - cron: "29 8 * * *"   # 08:29 UTC
-    - cron: "32 8 * * *"   # 08:32 UTC
-  workflow_dispatch: {}    # allows manual triggering from the Actions tab
+    # Backup-only fallback — GitHub Actions native cron proved unreliable
+    # for this repo (dropped 3 consecutive scheduled runs in May 2026).
+    # The primary trigger is an external cron service (cron-job.org)
+    # hitting the workflow_dispatch endpoint via the GitHub REST API.
+    - cron: "23 4 * * *"
+  workflow_dispatch: {}    # manual trigger from Actions tab + external API
   repository_dispatch:
-    # Allows an external cron service (e.g. cron-job.org) to trigger the
-    # workflow via the GitHub REST API — the most reliable fix if even the
-    # multi-slot schedule above continues to drop runs.
     types: [daily-banner-trigger]
 
 permissions:
