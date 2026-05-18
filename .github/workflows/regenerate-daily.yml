@@ -1,12 +1,10 @@
 name: Regenerate Panalux banner
 
 on:
-  schedule:
-    # Backup-only fallback — GitHub Actions native cron proved unreliable
-    # for this repo (dropped 3 consecutive scheduled runs in May 2026).
-    # The primary trigger is an external cron service (cron-job.org)
-    # hitting the workflow_dispatch endpoint via the GitHub REST API.
-    - cron: "23 4 * * *"
+  # Primary trigger: external cron-job.org POSTs daily to the workflow_dispatch
+  # endpoint with a fine-grained PAT (scoped to Actions: Read/Write on this
+  # repo only). GitHub Actions native `schedule:` was tried and proved
+  # unreliable — runs dropped or delayed 4–6 hours — so removed entirely.
   workflow_dispatch: {}    # manual trigger from Actions tab + external API
   repository_dispatch:
     types: [daily-banner-trigger]
