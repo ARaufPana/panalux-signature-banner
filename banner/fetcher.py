@@ -31,7 +31,14 @@ OG_DESCRIPTION_RE = re.compile(
     r'<meta\s+(?:property|name)=["\']og:description["\']\s+content=["\']([^"\']*)["\']',
     re.IGNORECASE,
 )
-PANALUX_MARKER = "serviced by panalux"
+# A credit counts as Panalux if "Panalux" appears anywhere in the
+# "serviced by ..." clause — not just immediately after "serviced by".
+# Joint credits list both divisions in either order ("serviced by Panalux
+# & Panavision" OR "serviced by Panavision & Panalux"), so a plain substring
+# check on "serviced by panalux" silently dropped Panavision-first joints.
+# Anchoring on "serviced by" (rather than matching "panalux" anywhere) avoids
+# false positives from a title that happened to contain the word.
+PANALUX_MARKER_RE = re.compile(r"serviced by\b.*\bpanalux\b", re.IGNORECASE)
 
 
 @dataclass
@@ -102,7 +109,7 @@ def is_panalux_credit(detail_url: str) -> bool:
     m = OG_DESCRIPTION_RE.search(resp.text)
     if not m:
         return False
-    return PANALUX_MARKER in m.group(1).lower()
+    return bool(PANALUX_MARKER_RE.search(m.group(1)))
 
 
 LISTING_BASE_URL = "https://www.panavision.com/highlights/credits"
