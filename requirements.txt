@@ -5,7 +5,7 @@
 # opens weekly PRs to keep these current.
 #
 # Direct dependencies (4):
-Pillow==11.3.0
+Pillow==12.3.0
 requests==2.32.5
 beautifulsoup4==4.14.3
 lxml==6.1.0
