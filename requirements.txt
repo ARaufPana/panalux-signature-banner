@@ -15,7 +15,7 @@ charset-normalizer==3.4.7
 idna==3.18
 soupsieve==2.8.4
 typing_extensions==4.16.0
-urllib3==2.6.3
+urllib3==2.7.0
 # Note: Flask + APScheduler removed July 2026 — they served only the
 # never-deployed local dev server (app.py / banner/scheduler.py); the
 # production path (regenerate.py) does not import them.
