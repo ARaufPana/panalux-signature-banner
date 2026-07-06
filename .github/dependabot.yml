@@ -1,0 +1,23 @@
+# Keeps the pinned dependency closure (requirements.txt) and the GitHub
+# Actions versions current via weekly review PRs. Nothing merges without
+# the owner's approval — this is the controlled-update half of security
+# remediation R1.
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 5
