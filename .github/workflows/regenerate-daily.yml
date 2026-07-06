@@ -59,7 +59,7 @@ jobs:
 
       - name: Upload banner as workflow artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: panalux-banner-${{ github.run_id }}
           path: cache/panalux-latest.png
