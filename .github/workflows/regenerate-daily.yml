@@ -50,8 +50,30 @@ jobs:
       - name: Install Python deps
         run: pip install -r requirements.txt
 
+      - name: Keep a copy of the currently published banner
+        run: cp cache/panalux-latest.png /tmp/published.png || true
+
       - name: Regenerate banner
         run: python regenerate.py
+
+      # Log-only: pixel-compare the fresh render with the currently published
+      # banner, so every run's log states whether the image actually changed
+      # (PNG bytes can differ between encoder versions with identical pixels).
+      - name: Pixel-compare with published banner (log only)
+        if: always()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageChops
+          new, old = Path("cache/panalux-latest.png"), Path("/tmp/published.png")
+          missing = [str(p) for p in (new, old) if not p.exists()]
+          if missing:
+              print("compare skipped, missing:", missing); raise SystemExit(0)
+          a, b = Image.open(old).convert("RGBA"), Image.open(new).convert("RGBA")
+          bbox = ImageChops.difference(a, b).getbbox() if a.size == b.size else "size differs"
+          print(f"published {a.size} {old.stat().st_size} B | fresh {b.size} {new.stat().st_size} B "
+                f"| pixel-identical: {bbox is None} | diff bbox: {bbox}")
+          PY
 
       # Skipped when a manual run sets publish=false — lets a branch prove
       # itself end-to-end without committing a banner. cron-job.org dispatches
