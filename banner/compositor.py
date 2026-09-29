@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import requests
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 from . import config
 from .fetcher import Credit
@@ -30,34 +30,6 @@ POSTER_RATIO = 350 / 525  # 2:3
 # the existing Panalux 2025 signature text colour exactly.
 COLOR_TEXT = (123, 124, 126, 255)  # #7B7C7E with full alpha
 COLOR_ACCENT = (228, 2, 44, 255)  # #E4022C — exact red sampled from Panalux 2025 logo
-
-# Font paths — try real Arial first (macOS native + Microsoft Core Fonts
-# package on Linux), then Liberation Sans (metric-compatible) as fallback.
-FONT_BOLD_CANDIDATES = [
-    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",                # macOS
-    "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf",           # Ubuntu w/ ttf-mscorefonts-installer
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",     # Ubuntu metric-compatible fallback
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-]
-FONT_REGULAR_CANDIDATES = [
-    "/System/Library/Fonts/Supplemental/Arial.ttf",
-    "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf",
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-]
-
-
-def _resolve_font(candidates: List[str]) -> str:
-    for p in candidates:
-        if Path(p).exists():
-            return p
-    raise FileNotFoundError(
-        f"None of the candidate font paths exist on this system: {candidates}"
-    )
-
-
-def _load_font(candidates: List[str], display_size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(_resolve_font(candidates), display_size * config.SCALE)
 
 
 def _fetch_poster(url: str) -> Image.Image:
