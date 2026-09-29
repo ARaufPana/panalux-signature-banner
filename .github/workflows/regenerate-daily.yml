@@ -5,7 +5,12 @@ on:
   # endpoint with a fine-grained PAT (scoped to Actions: Read/Write on this
   # repo only). GitHub Actions native `schedule:` was tried and proved
   # unreliable — runs dropped or delayed 4–6 hours — so removed entirely.
-  workflow_dispatch: {}    # manual trigger from Actions tab + external API
+  workflow_dispatch:       # manual trigger from Actions tab + external API
+    inputs:
+      publish:
+        description: "Commit the result to this repo (set false for a dry run on a branch)"
+        type: boolean
+        default: true
   repository_dispatch:
     types: [daily-banner-trigger]
 
@@ -48,7 +53,11 @@ jobs:
       - name: Regenerate banner
         run: python regenerate.py
 
+      # Skipped when a manual run sets publish=false — lets a branch prove
+      # itself end-to-end without committing a banner. cron-job.org dispatches
+      # carry no inputs, so the default (true) applies to every production run.
       - name: Commit banner if changed
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

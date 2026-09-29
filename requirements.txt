@@ -4,18 +4,22 @@
 # build without a reviewed commit. Dependabot (.github/dependabot.yml)
 # opens weekly PRs to keep these current.
 #
+# Refreshed 2026-09-29: closes 23 Dependabot alerts (Pillow x17, urllib3 x2,
+# soupsieve x2, requests x1). Verified pixel-identical banner output vs the
+# previous closure before merge.
+#
 # Direct dependencies (4):
-Pillow==11.3.0
-requests==2.32.5
-beautifulsoup4==4.14.3
-lxml==6.1.0
+Pillow==12.3.0
+requests==2.34.2
+beautifulsoup4==4.15.0
+lxml==6.1.2
 # Transitive dependencies (6):
-certifi==2026.6.17
-charset-normalizer==3.4.7
-idna==3.18
-soupsieve==2.8.4
+certifi==2026.7.22
+charset-normalizer==3.5.1
+idna==3.20
+soupsieve==2.10
 typing_extensions==4.16.0
-urllib3==2.6.3
+urllib3==2.8.0
 # Note: Flask + APScheduler removed July 2026 — they served only the
 # never-deployed local dev server (app.py / banner/scheduler.py); the
 # production path (regenerate.py) does not import them.
